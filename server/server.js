@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
-const http = require("http");
+const http = require("node:http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const runpodApi = require("./services/runpodApi");
@@ -14,6 +14,40 @@ const io = new Server(server, {
 });
 
 app.use(cors());
+
+// Proxy to my_chatgpt backend (before express.json() to preserve raw body for file uploads)
+const CHATGPT_API_HOST = process.env.CHATGPT_API_HOST || "localhost";
+const CHATGPT_API_PORT = process.env.CHATGPT_API_PORT || 8080;
+
+app.all("/chatgpt-api/*", (req, res) => {
+  const targetPath = req.path.replace("/chatgpt-api", "/api");
+  const queryString = req._parsedUrl?.search || "";
+
+  const options = {
+    hostname: CHATGPT_API_HOST,
+    port: CHATGPT_API_PORT,
+    path: targetPath + queryString,
+    method: req.method,
+    headers: {
+      ...req.headers,
+      host: `${CHATGPT_API_HOST}:${CHATGPT_API_PORT}`,
+    },
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
+
+  proxyReq.on("error", (err) => {
+    if (!res.headersSent) {
+      res.status(502).json({ error: "ChatGPT API proxy error: " + err.message });
+    }
+  });
+
+  req.pipe(proxyReq);
+});
+
 app.use(express.json());
 
 // ─── REST API Routes ────────────────────────────────────
@@ -143,7 +177,9 @@ let podCache = [];
 async function refreshPodCache() {
   try {
     podCache = await runpodApi.getPods();
-  } catch {}
+  } catch (err) {
+    console.error("Failed to refresh pod cache:", err);
+  }
 }
 refreshPodCache();
 setInterval(refreshPodCache, 30000);

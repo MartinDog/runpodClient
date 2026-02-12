@@ -6,13 +6,14 @@ import SettingsModal from './components/settings/SettingsModal'
 import DeployModal from './components/deploy/DeployModal'
 import LogViewer from './components/terminal/LogViewer'
 import Terminal from './components/terminal/Terminal'
+import DataManager from './components/data/DataManager'
 import { usePods } from './hooks/usePods'
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [deployOpen, setDeployOpen] = useState(false)
   const [selectedPod, setSelectedPod] = useState(null)
-  const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' | 'logs' | 'terminal'
+  const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' | 'logs' | 'terminal' | 'dataManager'
 
   const { data: pods, isLoading, error } = usePods()
 
@@ -42,6 +43,8 @@ export default function App() {
         apiConnected={apiConnected}
         onSettingsClick={() => setSettingsOpen(true)}
         onBackClick={viewMode !== 'dashboard' ? goBack : null}
+        onDataClick={() => setViewMode(viewMode === 'dataManager' ? 'dashboard' : 'dataManager')}
+        viewMode={viewMode}
       />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
@@ -67,6 +70,10 @@ export default function App() {
 
         {viewMode === 'terminal' && selectedPod && (
           <Terminal pod={selectedPod} onClose={goBack} />
+        )}
+
+        {viewMode === 'dataManager' && (
+          <DataManager />
         )}
       </main>
 

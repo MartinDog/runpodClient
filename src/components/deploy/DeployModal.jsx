@@ -4,16 +4,29 @@ import Modal from "../ui/Modal";
 import { useDeployPod } from "../../hooks/usePods";
 import toast from "react-hot-toast";
 
-const late TEMPLATES; 
-
 export default function DeployModal({ open, onClose }) {
+  const [TEMPLATES, setTEMPLATES] = useState([]);
   const [name, setName] = useState("My-GPU-Server");
-  const [template, setTemplate] = useState(TEMPLATES[0].id);
+  const [template, setTemplate] = useState([]);
   const [gpuType, setGpuType] = useState("");
   const [volumeSize, setVolumeSize] = useState(50);
   const [gpuTypes, setGpuTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const deployPod = useDeployPod();
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/templates")
+        .then((r) => r.json())
+        .then((templates) => {
+          setTEMPLATES(templates);
+          if (templates.length > 0 && !template) {
+            setTemplate(templates[0].imageName);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -86,10 +99,9 @@ export default function DeployModal({ open, onClose }) {
           <select
             value={template}
             onChange={(e) => setTemplate(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500"
-          >
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500">
             {TEMPLATES.map((t) => (
-              <option key={t.id} value={t.id}>
+              <option key={t.imageName} value={t.imageName}>
                 {t.name}
               </option>
             ))}
@@ -104,8 +116,7 @@ export default function DeployModal({ open, onClose }) {
           <select
             value={gpuType}
             onChange={(e) => setGpuType(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500"
-          >
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500">
             {gpuTypes.length === 0 && (
               <option value="">Loading GPU types...</option>
             )}
@@ -145,8 +156,7 @@ export default function DeployModal({ open, onClose }) {
           <button
             onClick={handleDeploy}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg text-sm font-semibold transition-colors"
-          >
+            className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg text-sm font-semibold transition-colors">
             {loading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (

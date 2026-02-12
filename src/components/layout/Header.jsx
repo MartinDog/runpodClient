@@ -1,6 +1,6 @@
-import { Server, Settings, ArrowLeft, Wifi, WifiOff } from 'lucide-react'
+import { Server, Settings, ArrowLeft, Wifi, WifiOff, Database } from 'lucide-react'
 
-export default function Header({ totalCost, apiConnected, onSettingsClick, onBackClick }) {
+export default function Header({ totalCost, apiConnected, onSettingsClick, onBackClick, onDataClick, viewMode }) {
   return (
     <header className="bg-gray-900 border-b border-gray-800 px-4 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -42,6 +42,18 @@ export default function Header({ totalCost, apiConnected, onSettingsClick, onBac
               </>
             )}
           </div>
+
+          <button
+            onClick={onDataClick}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'dataManager'
+                ? 'text-purple-400 bg-purple-600/20'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            }`}
+            title="Knowledge Base"
+          >
+            <Database size={20} />
+          </button>
 
           <button
             onClick={onSettingsClick}

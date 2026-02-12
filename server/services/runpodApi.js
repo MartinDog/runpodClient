@@ -75,8 +75,9 @@ async function getPods() {
             }
           }
         }
-        templates {
+        podTemplates {
           id
+          name
           imageName
         }
       }
