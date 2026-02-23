@@ -3,26 +3,25 @@ import { Toaster } from 'react-hot-toast'
 import Header from './components/layout/Header'
 import Dashboard from './components/dashboard/Dashboard'
 import SettingsModal from './components/settings/SettingsModal'
-import DeployModal from './components/deploy/DeployModal'
-import LogViewer from './components/terminal/LogViewer'
-import Terminal from './components/terminal/Terminal'
+import NewSessionModal from './components/dashboard/NewSessionModal'
+import ChatHistory from './components/chat/ChatHistory'
 import DataManager from './components/data/DataManager'
-import { usePods } from './hooks/usePods'
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [deployOpen, setDeployOpen] = useState(false)
-  const [selectedPod, setSelectedPod] = useState(null)
-  const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' | 'logs' | 'terminal' | 'dataManager'
+  const [newSessionOpen, setNewSessionOpen] = useState(false)
+  const [selectedSession, setSelectedSession] = useState(null)
+  const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' | 'chatHistory' | 'dataManager'
+  const [userId, setUserId] = useState(() => localStorage.getItem('chatgpt_userId') || '')
 
-  const { data: pods, isLoading, error } = usePods()
-
-  const totalCost = pods?.reduce((sum, pod) => sum + (pod.costPerHr || 0), 0) || 0
-  const apiConnected = !error
+  const handleSetUserId = (id) => {
+    localStorage.setItem('chatgpt_userId', id)
+    setUserId(id)
+  }
 
   const goBack = () => {
     setViewMode('dashboard')
-    setSelectedPod(null)
+    setSelectedSession(null)
   }
 
   return (
@@ -39,8 +38,7 @@ export default function App() {
       />
 
       <Header
-        totalCost={totalCost}
-        apiConnected={apiConnected}
+        userId={userId}
         onSettingsClick={() => setSettingsOpen(true)}
         onBackClick={viewMode !== 'dashboard' ? goBack : null}
         onDataClick={() => setViewMode(viewMode === 'dataManager' ? 'dashboard' : 'dataManager')}
@@ -50,26 +48,18 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {viewMode === 'dashboard' && (
           <Dashboard
-            pods={pods || []}
-            isLoading={isLoading}
-            onDeploy={() => setDeployOpen(true)}
-            onViewLogs={(pod) => {
-              setSelectedPod(pod)
-              setViewMode('logs')
-            }}
-            onOpenTerminal={(pod) => {
-              setSelectedPod(pod)
-              setViewMode('terminal')
+            userId={userId}
+            onSetUserId={handleSetUserId}
+            onNewSession={() => setNewSessionOpen(true)}
+            onViewHistory={(session) => {
+              setSelectedSession(session)
+              setViewMode('chatHistory')
             }}
           />
         )}
 
-        {viewMode === 'logs' && selectedPod && (
-          <LogViewer pod={selectedPod} onClose={goBack} />
-        )}
-
-        {viewMode === 'terminal' && selectedPod && (
-          <Terminal pod={selectedPod} onClose={goBack} />
+        {viewMode === 'chatHistory' && selectedSession && (
+          <ChatHistory session={selectedSession} userId={userId} onClose={goBack} />
         )}
 
         {viewMode === 'dataManager' && (
@@ -78,7 +68,11 @@ export default function App() {
       </main>
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <DeployModal open={deployOpen} onClose={() => setDeployOpen(false)} />
+      <NewSessionModal
+        open={newSessionOpen}
+        onClose={() => setNewSessionOpen(false)}
+        userId={userId}
+      />
     </div>
   )
 }

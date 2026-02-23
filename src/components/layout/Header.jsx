@@ -1,6 +1,6 @@
-import { Server, Settings, ArrowLeft, Wifi, WifiOff, Database } from 'lucide-react'
+import { Settings, ArrowLeft, Database, MessageSquare } from 'lucide-react'
 
-export default function Header({ totalCost, apiConnected, onSettingsClick, onBackClick, onDataClick, viewMode }) {
+export default function Header({ userId, onSettingsClick, onBackClick, onDataClick, viewMode }) {
   return (
     <header className="bg-gray-900 border-b border-gray-800 px-4 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -15,33 +15,18 @@ export default function Header({ totalCost, apiConnected, onSettingsClick, onBac
           )}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-              <Server size={18} />
+              <MessageSquare size={18} />
             </div>
-            <span className="text-lg font-bold">RunPod Admin</span>
+            <span className="text-lg font-bold">ChatGPT Admin</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="text-sm text-gray-400">
-            Total Usage:{' '}
-            <span className="text-white font-semibold">
-              ${totalCost.toFixed(2)}/hr
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            {apiConnected ? (
-              <>
-                <Wifi size={16} className="text-green-400" />
-                <span className="text-green-400">API Connected</span>
-              </>
-            ) : (
-              <>
-                <WifiOff size={16} className="text-red-400" />
-                <span className="text-red-400">Disconnected</span>
-              </>
-            )}
-          </div>
+        <div className="flex items-center gap-4">
+          {userId && (
+            <div className="text-sm text-gray-400">
+              User: <span className="text-purple-400 font-medium">{userId}</span>
+            </div>
+          )}
 
           <button
             onClick={onDataClick}
