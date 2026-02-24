@@ -6,12 +6,13 @@ import SettingsModal from './components/settings/SettingsModal'
 import NewSessionModal from './components/dashboard/NewSessionModal'
 import ChatHistory from './components/chat/ChatHistory'
 import DataManager from './components/data/DataManager'
+import RunpodManager from './components/runpod/RunpodManager'
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [newSessionOpen, setNewSessionOpen] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
-  const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' | 'chatHistory' | 'dataManager'
+  const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' | 'chatHistory' | 'dataManager' | 'runpod'
   const [userId, setUserId] = useState(() => localStorage.getItem('chatgpt_userId') || '')
 
   const handleSetUserId = (id) => {
@@ -40,8 +41,9 @@ export default function App() {
       <Header
         userId={userId}
         onSettingsClick={() => setSettingsOpen(true)}
-        onBackClick={viewMode !== 'dashboard' ? goBack : null}
+        onBackClick={viewMode === 'chatHistory' ? goBack : null}
         onDataClick={() => setViewMode(viewMode === 'dataManager' ? 'dashboard' : 'dataManager')}
+        onRunpodClick={() => setViewMode(viewMode === 'runpod' ? 'dashboard' : 'runpod')}
         viewMode={viewMode}
       />
 
@@ -64,6 +66,10 @@ export default function App() {
 
         {viewMode === 'dataManager' && (
           <DataManager />
+        )}
+
+        {viewMode === 'runpod' && (
+          <RunpodManager />
         )}
       </main>
 

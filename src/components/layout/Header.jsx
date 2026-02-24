@@ -1,6 +1,6 @@
-import { Settings, ArrowLeft, Database, MessageSquare } from 'lucide-react'
+import { Settings, ArrowLeft, Database, MessageSquare, Server } from 'lucide-react'
 
-export default function Header({ userId, onSettingsClick, onBackClick, onDataClick, viewMode }) {
+export default function Header({ userId, onSettingsClick, onBackClick, onDataClick, onRunpodClick, viewMode }) {
   return (
     <header className="bg-gray-900 border-b border-gray-800 px-4 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -27,6 +27,18 @@ export default function Header({ userId, onSettingsClick, onBackClick, onDataCli
               User: <span className="text-purple-400 font-medium">{userId}</span>
             </div>
           )}
+
+          <button
+            onClick={onRunpodClick}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'runpod'
+                ? 'text-purple-400 bg-purple-600/20'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            }`}
+            title="RunPod Manager"
+          >
+            <Server size={20} />
+          </button>
 
           <button
             onClick={onDataClick}

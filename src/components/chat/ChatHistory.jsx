@@ -12,7 +12,7 @@ export default function ChatHistory({ session, userId, onClose }) {
   const [message, setMessage] = useState('')
   const bottomRef = useRef(null)
 
-  const { data: history, isLoading } = useChatHistory(session.id)
+  const { data: history, isLoading } = useChatHistory(session.sessionId)
   const sendMessage = useSendMessage()
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function ChatHistory({ session, userId, onClose }) {
     const msg = message.trim()
     setMessage('')
     try {
-      await sendMessage.mutateAsync({ sessionId: session.id, userId, message: msg })
+      await sendMessage.mutateAsync({ sessionId: session.sessionId, userId, message: msg })
     } catch (err) {
       toast.error(err.message)
     }
