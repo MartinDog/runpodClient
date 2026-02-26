@@ -5,12 +5,11 @@ import PodCard from '../dashboard/PodCard'
 import EmptySlot from '../dashboard/EmptySlot'
 import DeployModal from '../deploy/DeployModal'
 import LogViewer from '../terminal/LogViewer'
-import Terminal from '../terminal/Terminal'
 
 export default function RunpodManager() {
   const [deployOpen, setDeployOpen] = useState(false)
   const [selectedPod, setSelectedPod] = useState(null)
-  const [subView, setSubView] = useState('pods') // 'pods' | 'logs' | 'terminal'
+  const [subView, setSubView] = useState('pods') // 'pods' | 'logs'
 
   const { data: pods, isLoading, error } = usePods()
 
@@ -23,10 +22,6 @@ export default function RunpodManager() {
 
   if (subView === 'logs' && selectedPod) {
     return <LogViewer pod={selectedPod} onClose={goBack} />
-  }
-
-  if (subView === 'terminal' && selectedPod) {
-    return <Terminal pod={selectedPod} onClose={goBack} />
   }
 
   if (isLoading) {
@@ -69,10 +64,6 @@ export default function RunpodManager() {
             onViewLogs={() => {
               setSelectedPod(pod)
               setSubView('logs')
-            }}
-            onOpenTerminal={() => {
-              setSelectedPod(pod)
-              setSubView('terminal')
             }}
           />
         ))}

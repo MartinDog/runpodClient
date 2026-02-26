@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import {
-  ArrowDown, Trash2, Search, Download, X, Loader2,
+  ArrowDown, Trash2, Search, Download, X, Loader2, RefreshCw,
 } from 'lucide-react'
 import { useLogs } from '../../hooks/useLogs'
-import ResourceBar from './ResourceBar'
 
 export default function LogViewer({ pod, onClose }) {
-  const { logs, resources, connected, clearLogs } = useLogs(pod.id)
+  const [lines, setLines] = useState(200)
+  const { logs, loading, error, refetch, clearLogs } = useLogs(lines)
   const [autoScroll, setAutoScroll] = useState(true)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -40,7 +40,7 @@ export default function LogViewer({ pod, onClose }) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${pod.name || pod.id}-logs.txt`
+    a.download = `${pod?.name || pod?.id || 'logs'}-logs.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -50,26 +50,22 @@ export default function LogViewer({ pod, onClose }) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold">Logs: {pod.name || pod.id}</h2>
-          {connected ? (
-            <span className="text-xs text-green-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Live
-            </span>
-          ) : (
+          <h2 className="text-sm font-semibold">Logs: {pod?.name || pod?.id || 'Application'}</h2>
+          {loading ? (
             <span className="text-xs text-yellow-400 flex items-center gap-1">
               <Loader2 size={12} className="animate-spin" />
-              Connecting...
+              Loading...
             </span>
+          ) : error ? (
+            <span className="text-xs text-red-400">{error}</span>
+          ) : (
+            <span className="text-xs text-green-400">{logs.length} lines</span>
           )}
         </div>
         <button onClick={onClose} className="p-1 text-gray-400 hover:text-white">
           <X size={18} />
         </button>
       </div>
-
-      {/* Resource Bar */}
-      <ResourceBar resources={resources} />
 
       {/* Log Content */}
       <div
@@ -79,7 +75,7 @@ export default function LogViewer({ pod, onClose }) {
       >
         {filteredLogs.length === 0 ? (
           <div className="text-gray-600 text-center py-8">
-            {connected ? 'Waiting for log data...' : 'Connecting to pod...'}
+            {loading ? 'Loading logs...' : 'No log data.'}
           </div>
         ) : (
           filteredLogs.map((line, i) => (
@@ -136,6 +132,24 @@ export default function LogViewer({ pod, onClose }) {
             <Search size={12} />
             Search
           </button>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-400">Lines:</span>
+            <input
+              type="number"
+              value={lines}
+              onChange={(e) => setLines(Math.max(1, parseInt(e.target.value) || 200))}
+              className="w-16 bg-gray-800 text-white text-xs rounded px-2 py-1 outline-none"
+              min={1}
+            />
+          </div>
+          <button
+            onClick={refetch}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-gray-800 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
         </div>
         <button
           onClick={handleDownload}
@@ -150,7 +164,6 @@ export default function LogViewer({ pod, onClose }) {
 }
 
 function LogLine({ line, searchQuery }) {
-  // Color code by log level
   let color = 'text-gray-300'
   if (line.includes('ERROR') || line.includes('[STDERR]')) color = 'text-red-400'
   else if (line.includes('WARN')) color = 'text-yellow-400'

@@ -1,47 +1,47 @@
-import { useState } from 'react'
-import toast from 'react-hot-toast'
-import { Send, Loader2 } from 'lucide-react'
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { Send, Loader2 } from "lucide-react";
 
 export default function DocumentTab({ apiBase }) {
-  const [userId, setUserId] = useState('')
-  const [source, setSource] = useState('manual')
-  const [content, setContent] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  const [userId, setUserId] = useState("");
+  const [source, setSource] = useState("manual");
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!content.trim()) {
-      toast.error('Content is required')
-      return
+      toast.error("Content is required");
+      return;
     }
 
-    setLoading(true)
-    setResult(null)
+    setLoading(true);
+    setResult(null);
     try {
       const res = await fetch(`${apiBase}/vectordb/documents`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: content.trim(),
           userId: userId.trim() || undefined,
-          source: source.trim() || 'manual',
+          source: source.trim() || "manual",
         }),
-      })
+      });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.message || err.error || `HTTP ${res.status}`)
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || `HTTP ${res.status}`);
       }
-      const data = await res.json()
-      setResult(data)
-      toast.success('Document stored successfully')
-      setContent('')
+      const data = await res.json();
+      setResult(data);
+      toast.success("Document stored successfully");
+      setContent("");
     } catch (err) {
-      toast.error(err.message)
+      toast.error(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -53,7 +53,9 @@ export default function DocumentTab({ apiBase }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">User ID</label>
+            <label className="block text-sm text-gray-400 mb-1.5">
+              User ID
+            </label>
             <input
               type="text"
               value={userId}
@@ -75,7 +77,9 @@ export default function DocumentTab({ apiBase }) {
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Content *</label>
+          <label className="block text-sm text-gray-400 mb-1.5">
+            Content *
+          </label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -90,8 +94,12 @@ export default function DocumentTab({ apiBase }) {
           disabled={loading || !content.trim()}
           className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition-colors"
         >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-          {loading ? 'Storing...' : 'Store Document'}
+          {loading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Send size={16} />
+          )}
+          {loading ? "Storing..." : "Store Document"}
         </button>
       </form>
 
@@ -99,10 +107,13 @@ export default function DocumentTab({ apiBase }) {
         <div className="mt-6 p-4 bg-green-600/10 border border-green-600/30 rounded-lg">
           <p className="text-sm text-green-400 font-medium">Document Stored</p>
           <p className="text-sm text-gray-300 mt-1">
-            Document ID: <code className="text-white bg-gray-800 px-1.5 py-0.5 rounded">{result.documentId}</code>
+            Document ID:{" "}
+            <code className="text-white bg-gray-800 px-1.5 py-0.5 rounded">
+              {result.documentId}
+            </code>
           </p>
         </div>
       )}
     </div>
-  )
+  );
 }

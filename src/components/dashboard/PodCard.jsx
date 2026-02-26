@@ -5,7 +5,6 @@ import {
   RotateCcw,
   Trash2,
   ScrollText,
-  TerminalSquare,
   Loader2,
 } from "lucide-react";
 import {
@@ -49,7 +48,7 @@ function formatUptime(seconds) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-export default function PodCard({ pod, onViewLogs, onOpenTerminal }) {
+export default function PodCard({ pod, onViewLogs }) {
   const [confirming, setConfirming] = useState(false);
   const status = getStatus(pod);
   const isRunning = status === STATUS_STYLES.RUNNING;
@@ -173,14 +172,6 @@ export default function PodCard({ pod, onViewLogs, onOpenTerminal }) {
         )}
       </div>
 
-      {/* SSH Terminal Button */}
-      <button
-        onClick={onOpenTerminal}
-        className="flex items-center justify-center gap-2 w-full py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium transition-colors"
-      >
-        <TerminalSquare size={16} />
-        Open SSH Terminal
-      </button>
     </div>
   );
 }

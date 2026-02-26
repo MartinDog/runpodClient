@@ -1,53 +1,32 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useSocket } from './useSocket'
+import { useState, useCallback, useEffect } from "react";
 
-const MAX_LOG_LINES = 5000
+export function useLogs(lines = 200) {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-export function useLogs(podId) {
-  const socket = useSocket()
-  const [logs, setLogs] = useState([])
-  const [resources, setResources] = useState(null)
-  const [connected, setConnected] = useState(false)
-  const subscribed = useRef(false)
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `https://d8f5euw4493kgn-8080.proxy.runpod.net/api/logs?lines=${lines}`,
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      setLogs(text.split("\n").filter((line) => line.length > 0));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [lines]);
 
   useEffect(() => {
-    if (!socket || !podId) return
+    fetchLogs();
+  }, [fetchLogs]);
 
-    if (!subscribed.current) {
-      socket.emit('logs:subscribe', { podId })
-      subscribed.current = true
-    }
+  const clearLogs = useCallback(() => setLogs([]), []);
 
-    const onLogData = (data) => {
-      setLogs((prev) => {
-        const next = [...prev, ...data.lines]
-        return next.length > MAX_LOG_LINES ? next.slice(-MAX_LOG_LINES) : next
-      })
-    }
-
-    const onResourceData = (data) => {
-      setResources(data)
-    }
-
-    const onLogConnected = () => setConnected(true)
-    const onLogDisconnected = () => setConnected(false)
-
-    socket.on('logs:data', onLogData)
-    socket.on('resources:data', onResourceData)
-    socket.on('logs:connected', onLogConnected)
-    socket.on('logs:disconnected', onLogDisconnected)
-
-    return () => {
-      socket.off('logs:data', onLogData)
-      socket.off('resources:data', onResourceData)
-      socket.off('logs:connected', onLogConnected)
-      socket.off('logs:disconnected', onLogDisconnected)
-      socket.emit('logs:unsubscribe', { podId })
-      subscribed.current = false
-    }
-  }, [socket, podId])
-
-  const clearLogs = useCallback(() => setLogs([]), [])
-
-  return { logs, resources, connected, clearLogs }
+  return { logs, loading, error, refetch: fetchLogs, clearLogs };
 }

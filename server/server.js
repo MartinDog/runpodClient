@@ -2,16 +2,10 @@ require("dotenv").config();
 
 const express = require("express");
 const http = require("node:http");
-const { Server } = require("socket.io");
 const cors = require("cors");
 const runpodApi = require("./services/runpodApi");
-const sshService = require("./services/sshService");
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-});
 
 app.use(cors());
 
@@ -160,6 +154,7 @@ app.post("/api/settings", (req, res) => {
   if (apiKey) process.env.RUNPOD_API_KEY = apiKey;
   res.json({ success: true });
 });
+
 app.get("/api/templates", (req, res) => {
   runpodApi
     .getTemplates()
@@ -170,60 +165,10 @@ app.get("/api/templates", (req, res) => {
       res.status(500).json({ error: err.message });
     });
 });
-// ─── Socket.io ──────────────────────────────────────────
-
-// Cache pod data for SSH connections
-let podCache = [];
-async function refreshPodCache() {
-  try {
-    podCache = await runpodApi.getPods();
-  } catch (err) {
-    console.error("Failed to refresh pod cache:", err);
-  }
-}
-refreshPodCache();
-setInterval(refreshPodCache, 30000);
-
-io.on("connection", (socket) => {
-  console.log(`Client connected: ${socket.id}`);
-
-  // Log streaming
-  socket.on("logs:subscribe", ({ podId }) => {
-    const pod = podCache.find((p) => p.id === podId);
-    if (!pod) {
-      socket.emit("logs:disconnected", { error: "Pod not found" });
-      return;
-    }
-    sshService.startLogStream(socket, pod);
-  });
-
-  socket.on("logs:unsubscribe", ({ podId }) => {
-    sshService.disconnect(`logs-${podId}-${socket.id}`);
-  });
-
-  // SSH terminal
-  socket.on("ssh:connect", ({ podId }) => {
-    const pod = podCache.find((p) => p.id === podId);
-    if (!pod) {
-      socket.emit("ssh:error", { error: "Pod not found" });
-      return;
-    }
-    sshService.createShell(socket, pod);
-  });
-
-  socket.on("ssh:disconnect", ({ podId }) => {
-    sshService.disconnect(`ssh-${podId}-${socket.id}`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`Client disconnected: ${socket.id}`);
-    sshService.disconnectAll(socket.id);
-  });
-});
 
 // ─── Start Server ───────────────────────────────────────
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`RunPod Admin Server running on port ${PORT}`);
 });
